@@ -213,7 +213,7 @@ let NT='fractalNoise', EM='overlay', BT='fractalNoise';
 let VW=3120, VH=2100;
 
 // ── PEGAR AQUI EL SVG COMPLETO ──────────────────────────────────
-let SVG_SRC = '';
+let SVG_SRC = ``;
 
 const presets={
   clean:  {f:0,   fr:.65, s:0,   sf:.018, e:0,   b:0,   bf:.022, sat:1,   nt:'fractalNoise', em:'overlay',    bt:'fractalNoise'},
@@ -241,25 +241,34 @@ let _isDirty     = false;  // hay cambios sin guardar
 let _suppressDirty = false; // bloquear markDirty durante applyConfig / reset
 
 async function initSVG(){
+  console.log("A");
+
   const response = await fetch('./etiqueta.svg');
-  if(!response.ok){
-    throw new Error('No se pudo cargar el SVG');
-  }
+  console.log("B", response.ok);
 
   SVG_SRC = await response.text();
-  g('SW').innerHTML = SVG_SRC;
-  const svg = g('LSVG');
+  console.log("C", SVG_SRC.length);
 
-  if(!svg) return;
+  g('SW').innerHTML = SVG_SRC;
+  console.log("D");
+
+  const svg = g('LSVG');
+  console.log("E", svg);
+
+  if(!svg){ 
+    throw new Error('SVG no tiene id LSVG');
+  }
+
   const styleEl = svg.querySelector('style');
   if(styleEl) styleEl.id = 'SVG_STYLE';
-  const vb = svg.getAttribute('viewBox');
 
+  const vb = svg.getAttribute('viewBox');
   if(vb){
     const p = vb.trim().split(/[\s,]+/);
     VW = parseFloat(p[2]);
     VH = parseFloat(p[3]);
   }
+
   updPngInfo();
 }
 
