@@ -273,43 +273,6 @@ async function initSVG(){
   updPngInfo();
 }
 
-function syncInputsFromConfig(cfg){
-  if(cfg.s5){
-    g('c_s5').value = cfg.s5;
-    g('h_s5').value = cfg.s5.toUpperCase();
-  }
-
-  if(cfg.s0){
-    g('c_s0').value = cfg.s0;
-    g('h_s0').value = cfg.s0.toUpperCase();
-  }
-
-  if(cfg.s2){
-    g('c_s2').value = cfg.s2;
-    g('h_s2').value = cfg.s2.toUpperCase();
-  }
-
-  if(cfg.s3){
-    g('c_s3').value = cfg.s3;
-    g('h_s3').value = cfg.s3.toUpperCase();
-  }
-
-  if(cfg.gold){
-    g('c_gold').value = cfg.gold;
-    g('h_gold').value = cfg.gold.toUpperCase();
-  }
-
-  if(cfg.s1){
-    g('c_s1').value = cfg.s1;
-    g('h_s1').value = cfg.s1.toUpperCase();
-  }
-
-  if(cfg.s7){
-    g('c_s7').value = cfg.s7;
-    g('h_s7').value = cfg.s7.toUpperCase();
-  }
-}
-
 // Recolecta el estado completo de la UI
 function collectConfig(){
   currentConfig = {
@@ -513,17 +476,14 @@ function initWithPersistence(){
       saveLS(urlCfg);
       _savedCfg=urlCfg;
       applyConfig(urlCfg);
-      syncInputsFromConfig(urlCfg);
     }else{
       // Ya tiene config guardada: la URL config se descarta, prioridad al LS
       _savedCfg=lsCfg;
       applyConfig(lsCfg);
-      syncInputsFromConfig(lsCfg);
     }
   }else if(lsCfg){
     _savedCfg=lsCfg;
     applyConfig(lsCfg);
-    syncInputsFromConfig(lsCfg);
   }else{
     applyP('clean');
   }
@@ -804,11 +764,11 @@ function exportPNG(){
   setup();
   initWithPersistence();
 
-  requestAnimationFrame(() => {
+  setTimeout(() => {
     if (_savedCfg) {
       applyConfig(_savedCfg);
     }
-  });
+  }, 0);
 
 })();
 </script>
