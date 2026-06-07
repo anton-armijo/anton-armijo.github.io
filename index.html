@@ -241,28 +241,25 @@ let _isDirty     = false;  // hay cambios sin guardar
 let _suppressDirty = false; // bloquear markDirty durante applyConfig / reset
 
 async function initSVG(){
-  console.log("A");
-
   const response = await fetch('./etiqueta.svg');
-  console.log("B", response.ok);
+
+  if(!response.ok){
+    throw new Error('No se pudo cargar el SVG');
+  }
 
   SVG_SRC = await response.text();
-  console.log("C", SVG_SRC.length);
 
   g('SW').innerHTML = SVG_SRC;
-  console.log("D");
 
   const svg = g('LSVG');
-  console.log("E", svg);
 
-  if(!svg){ 
-    throw new Error('SVG no tiene id LSVG');
-  }
+  if(!svg) return;
 
   const styleEl = svg.querySelector('style');
   if(styleEl) styleEl.id = 'SVG_STYLE';
 
   const vb = svg.getAttribute('viewBox');
+
   if(vb){
     const p = vb.trim().split(/[\s,]+/);
     VW = parseFloat(p[2]);
@@ -489,19 +486,6 @@ function initWithPersistence(){
   markClean();
 }
 
-// ════════════════════════════════════════════════════════════════
-// ── INIT SVG ────────────────────────────────────────────────────
-// ════════════════════════════════════════════════════════════════
-function initSVG(){
-  g('SW').innerHTML=SVG_SRC;
-  const svg=g('LSVG');
-  if(!svg)return;
-  const styleEl=svg.querySelector('style');
-  if(styleEl)styleEl.id='SVG_STYLE';
-  const vb=svg.getAttribute('viewBox');
-  if(vb){const p=vb.trim().split(/[\s,]+/); VW=parseFloat(p[2]); VH=parseFloat(p[3]);}
-  updPngInfo();
-}
 
 // ── COLOR HELPERS ────────────────────────────────────────────────
 function hexToRgb(hex){
