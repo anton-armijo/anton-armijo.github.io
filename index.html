@@ -245,25 +245,21 @@ let _isDirty     = false;  // hay cambios sin guardar
 let _suppressDirty = false; // bloquear markDirty durante applyConfig / reset
 
 async function initSVG(){
-  const response = await fetch('./etiqueta.svg');
+  const response = await fetch('./ETIQUETA.svg');
+  if(!response.ok) throw new Error('No se pudo cargar el SVG');
 
-  if(!response.ok){
-    throw new Error('No se pudo cargar el SVG');
-  }
+  const svgText = await response.text();
+  g('SW').innerHTML = svgText;
 
-  SVG_SRC = await response.text();
-
-  g('SW').innerHTML = SVG_SRC;
-
-  const svg = g('LSVG');
-
+  const svg = g('SW').querySelector('svg');
   if(!svg) return;
+
+  svg.id = 'LSVG';
 
   const styleEl = svg.querySelector('style');
   if(styleEl) styleEl.id = 'SVG_STYLE';
 
   const vb = svg.getAttribute('viewBox');
-
   if(vb){
     const p = vb.trim().split(/[\s,]+/);
     VW = parseFloat(p[2]);
