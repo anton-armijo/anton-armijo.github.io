@@ -83,7 +83,7 @@ input[type=color]{width:30px;height:30px;border-radius:7px;border:1px solid var(
       <h3>Exportar PNG</h3>
       <div class="cr">
         <span class="cl">Escala</span>
-        <input type="range" min="5" max="100" step="5" value="25" id="pngScaleR" oninput="updPngInfo()"/>
+        <input type="range" min="5" max="200" step="5" value="100" id="pngScaleR" oninput="updPngInfo()"/>
         <span class="cv" id="pngScaleV">25%</span>
       </div>
       <p class="px-info" id="pngPxInfo">780 x 525 px</p>
@@ -727,7 +727,7 @@ function initWithPersistence(){
     applyConfig(lsCfg);
   }else{
     // Nada guardado: aplicar preset aged sin marcar dirty
-    applyP('aged');
+    applyP('clean');
   }
   markClean();
 }
