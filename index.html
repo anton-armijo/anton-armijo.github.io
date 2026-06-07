@@ -241,7 +241,7 @@ let _isDirty     = false;  // hay cambios sin guardar
 let _suppressDirty = false; // bloquear markDirty durante applyConfig / reset
 
 async function initSVG(){
-  const response = await fetch('./svg/etiqueta.svg');
+  const response = await fetch('./etiqueta.svg');
   if(!response.ok){
     throw new Error('No se pudo cargar el SVG');
   }
@@ -437,7 +437,7 @@ function resetConfig(){
   setSVGColor('s7','fill','#e9e9e9');
   // Preset clean (valores iniciales)
   applyP('clean');
-  g('pngScaleR').value=25; updPngInfo();
+  g('pngScaleR').value=100; updPngInfo();
   _suppressDirty=false;
   _savedCfg=null;
   markClean();
