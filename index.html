@@ -104,7 +104,6 @@ input[type=color]{width:30px;height:30px;border-radius:7px;border:1px solid var(
       <p class="px-info" id="pngPxInfo">— x — px</p>
       <div class="progress-bar" id="pngProgress"><div class="progress-fill" id="pngFill"></div></div>
       <button class="eb primary" style="margin-top:8px" onclick="exportPNG()">&#8595; Descargar PNG</button>
-      <button class="eb" style="margin-top:8px" onclick="exportZIP()">&#8595; Descargar stickers.zip</button>
     </div>
   </div>
 
@@ -189,7 +188,6 @@ input[type=color]{width:30px;height:30px;border-radius:7px;border:1px solid var(
   </div><!-- /ccol -->
 </div><!-- /lay -->
 
-<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 <script>
 if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
 
@@ -900,200 +898,49 @@ function exportSVG() {
   a.click();
 }
 
-// ── PNG / ZIP ─────────────────────────────────────────────────────
+// ── PNG ───────────────────────────────────────────────────────────
 function updPngInfo() {
   const pct=parseInt(g('pngScaleR').value);
   g('pngScaleV').textContent=pct+'%';
   g('pngPxInfo').textContent=Math.round(VW*pct/100)+' x '+Math.round(VH*pct/100)+' px';
 }
 
-function loadImageFromURL(url) {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.onload = () => resolve(img);
-    img.onerror = () => reject(new Error('No se pudo cargar la imagen SVG.'));
-    img.src = url;
-  });
-}
-
-function applyFilterStateToSVG(state, fs) {
-  if (!state?.el) return;
-  const svg = state.el;
-  const values = fs || presetToFilterState(state.filterPreset);
-  const fv  = values.fR   ?? .25;
-  const fr  = values.frR  ?? .65;
-  const sv  = values.sR   ?? .12;
-  const sf  = values.sfR  ?? .018;
-  const ev  = values.eR   ?? .35;
-  const bv  = values.bR   ?? .25;
-  const bf  = values.bfR  ?? .022;
-  const sat = values.satR ?? 1;
-  const nt  = values.NT   ?? NT;
-  const em  = values.EM   ?? EM;
-  const bt  = values.BT   ?? BT;
-
-  svg.style.filter = `saturate(${Number(sat).toFixed(2)})`;
-
-  svg.querySelectorAll('[id^="bg-"]').forEach(bgPath => {
-    const z = bgPath.id.replace('bg-','');
-
-    const ffid = 'TF-FIB-' + z;
-    const fft1 = svg.querySelector('#' + ffid + '-ft1');
-    const ffi  = svg.querySelector('#' + ffid + '-fi');
-    const fft2 = svg.querySelector('#' + ffid + '-ft2');
-    const fst  = svg.querySelector('#' + ffid + '-st');
-    if (fft1) {
-      fft1.setAttribute('type', nt);
-      fft1.setAttribute('baseFrequency', `${fr.toFixed(3)} ${(fr * .54).toFixed(3)}`);
-    }
-    if (ffi) {
-      ffi.setAttribute('values', `${(-fv*.9).toFixed(3)} 0 0 0 1  ${(-fv).toFixed(3)} 0 0 0 1  ${(-fv*1.1).toFixed(3)} 0 0 0 1  0 0 0 0 1`);
-    }
-    if (fft2) {
-      fft2.setAttribute('baseFrequency', `${sf.toFixed(4)} ${(sf * .5).toFixed(4)}`);
-    }
-    if (fst) {
-      fst.setAttribute('values', `${(-sv*.70).toFixed(3)} 0 0 0 1  ${(-sv*.85).toFixed(3)} 0 0 0 1  ${(-sv*.95).toFixed(3)} 0 0 0 1  0 0 0 0 1`);
-    }
-
-    const bfid = 'TF-BRN-' + z;
-    const bft3 = svg.querySelector('#' + bfid + '-ft3');
-    const bbn  = svg.querySelector('#' + bfid + '-bn');
-    if (bft3) {
-      bft3.setAttribute('type', bt);
-      bft3.setAttribute('baseFrequency', `${bf.toFixed(4)} ${(bf * .5).toFixed(4)}`);
-    }
-    if (bbn) {
-      bbn.setAttribute('values', `${bv.toFixed(3)} 0 0 0 0  ${(bv*.97).toFixed(3)} 0 0 0 0  ${(bv*.88).toFixed(3)} 0 0 0 0  0 0 0 0 1`);
-    }
-
-    const efid = 'TF-EMB-' + z;
-    const eft1 = svg.querySelector('#' + efid + '-ft1');
-    const eea  = svg.querySelector('#' + efid + '-ea');
-    const embRect = svg.querySelector('#TO-EMB-' + z);
-    if (eft1) {
-      eft1.setAttribute('type', nt);
-      eft1.setAttribute('baseFrequency', `${fr.toFixed(3)} ${(fr * .54).toFixed(3)}`);
-    }
-    if (eea) {
-      const half = (0.5 * (1 - ev)).toFixed(3);
-      eea.setAttribute('values', `${ev.toFixed(3)} 0 0 0 ${half}  0 ${ev.toFixed(3)} 0 0 ${half}  0 0 ${ev.toFixed(3)} 0 ${half}  0 0 0 0 1`);
-    }
-    if (embRect) embRect.setAttribute('style', `mix-blend-mode:${em};pointer-events:none`);
-  });
-}
-
-async function svgStateToPNGBlob(state, pct, fsOverride) {
-  if (!state?.el) throw new Error('SVG no disponible');
-  const svg = state.el;
-  applyFilterStateToSVG(state, fsOverride || state.filterState || presetToFilterState(state.filterPreset));
-
-  const w = Math.round(state.VW * pct / 100);
-  const h = Math.round(state.VH * pct / 100);
-  const prevF = svg.style.filter;
-  svg.style.filter = '';
-  const svgStr = new XMLSerializer().serializeToString(svg);
-  svg.style.filter = prevF;
-
-  const blob = new Blob([svgStr], { type: 'image/svg+xml;charset=utf-8' });
-  const url = URL.createObjectURL(blob);
-
-  try {
-    const img = await loadImageFromURL(url);
-    const canvas = document.createElement('canvas');
-    canvas.width = w;
-    canvas.height = h;
-    const ctx = canvas.getContext('2d');
-    ctx.filter = 'saturate(' + Number((fsOverride?.satR ?? state.filterState?.satR ?? 1)).toFixed(2) + ')';
-    ctx.drawImage(img, 0, 0, w, h);
-    ctx.filter = 'none';
-
-    return await new Promise((resolve, reject) => {
-      canvas.toBlob((pngBlob) => {
-        if (pngBlob) resolve(pngBlob);
-        else reject(new Error('No se pudo crear el PNG.'));
-      }, 'image/png');
-    });
-  } finally {
-    URL.revokeObjectURL(url);
-  }
-}
-
-async function exportPNG() {
-  const st = svgStates[activeIdx];
-  if (!st) return;
-
-  const pct = parseInt(g('pngScaleR').value);
-  const bar = g('pngProgress'), fill = g('pngFill');
-  const baseName = (st.name || 'etiqueta').replace(/\.[^.]+$/, '');
-
-  bar.classList.add('show');
-  fill.style.width = '20%';
-
-  try {
-    fill.style.width = '55%';
-    const pngBlob = await svgStateToPNGBlob(st, pct, captureFilterState());
-    fill.style.width = '90%';
-
-    const a = document.createElement('a');
-    a.download = baseName + '_' + pct + 'pct.png';
-    a.href = URL.createObjectURL(pngBlob);
-    a.click();
-
-    fill.style.width = '100%';
-    setTimeout(() => {
-      bar.classList.remove('show');
-      fill.style.width = '0%';
-    }, 600);
-  } catch (e) {
-    fill.style.width = '0%';
-    bar.classList.remove('show');
+function exportPNG() {
+  const svg=g('LSVG'); if (!svg) return;
+  const pct=parseInt(g('pngScaleR').value);
+  const w=Math.round(VW*pct/100), h=Math.round(VH*pct/100);
+  const prevF=svg.style.filter; svg.style.filter='';
+  const svgStr=new XMLSerializer().serializeToString(svg);
+  svg.style.filter=prevF;
+  const blob=new Blob([svgStr],{type:'image/svg+xml;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const bar=g('pngProgress'), fill=g('pngFill');
+  bar.classList.add('show'); fill.style.width='20%';
+  const img=new Image();
+  img.onload=function(){
+    fill.style.width='60%';
+    const canvas=document.createElement('canvas'); canvas.width=w; canvas.height=h;
+    const ctx=canvas.getContext('2d');
+    ctx.filter='saturate('+gv('satR').toFixed(2)+')';
+    ctx.drawImage(img,0,0,w,h); ctx.filter='none';
+    URL.revokeObjectURL(url); fill.style.width='90%';
+    const baseName=(svgStates[activeIdx]?.name||'etiqueta').replace(/\.[^.]+$/,'');
+    setTimeout(function(){
+      canvas.toBlob(function(pngBlob){
+        const a=document.createElement('a');
+        a.download=baseName+'_'+pct+'pct.png';
+        a.href=URL.createObjectURL(pngBlob); a.click();
+        fill.style.width='100%';
+        setTimeout(function(){bar.classList.remove('show'); fill.style.width='0%';},600);
+      },'image/png');
+    },50);
+  };
+  img.onerror=function(){
+    fill.style.width='0%'; bar.classList.remove('show');
     alert('Error al renderizar PNG. Verifica que el SVG no tenga recursos externos bloqueados.');
-  }
-}
-
-async function exportZIP() {
-  if (typeof JSZip === 'undefined') {
-    alert('No se cargó la librería ZIP.');
-    return;
-  }
-
-  const pct = parseInt(g('pngScaleR').value);
-  const bar = g('pngProgress'), fill = g('pngFill');
-
-  bar.classList.add('show');
-  fill.style.width = '5%';
-
-  try {
-    const zip = new JSZip();
-
-    for (let i = 0; i < svgStates.length; i++) {
-      const st = svgStates[i];
-      const fs = i === activeIdx ? captureFilterState() : (st.filterState || presetToFilterState(st.filterPreset));
-      const pngBlob = await svgStateToPNGBlob(st, pct, fs);
-      const baseName = (st.name || 'sticker').replace(/\.[^.]+$/, '');
-      zip.file(baseName + '.png', pngBlob);
-      fill.style.width = String(Math.round(((i + 1) / svgStates.length) * 85)) + '%';
-    }
-
-    fill.style.width = '92%';
-    const zipBlob = await zip.generateAsync({ type: 'blob' });
-
-    const a = document.createElement('a');
-    a.download = 'stickers.zip';
-    a.href = URL.createObjectURL(zipBlob);
-    a.click();
-
-    fill.style.width = '100%';
-    setTimeout(() => {
-      bar.classList.remove('show');
-      fill.style.width = '0%';
-    }, 600);
-  } catch (e) {
-    fill.style.width = '0%';
-    bar.classList.remove('show');
-    alert('Error al crear el ZIP: ' + (e?.message || e));
-  }
+    URL.revokeObjectURL(url);
+  };
+  img.src=url;
 }
 
 // ── INIT CON PERSISTENCIA ────────────────────────────────────────
