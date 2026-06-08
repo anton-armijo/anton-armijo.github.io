@@ -27,7 +27,8 @@
         "s4": { "name": "Texto dorado" },
         "s7": { "name": "Blanco" },
         "s9": { "name": "Logo" }
-      },
+      }
+    },
     "tapa.svg": {
       "filter": "clean",
       "fused_colors": [
