@@ -466,6 +466,7 @@ function buildColorUI() {
       let h=hexInput.value.trim();
       if (!h.startsWith('#')) h='#'+h;
       if (/^#[0-9a-fA-F]{6}$/.test(h)) setGroupColor(i,h);
+      else hexInput.value=svgStates[activeIdx].colorGroups[i].color.toUpperCase();
     });
 
     const sw=document.createElement('div'); sw.className='csw';
@@ -486,7 +487,7 @@ function buildColorUI() {
         sp.textContent='Δ '+peer.sameIds.join(' · ');
         parts.push(sp);
       }
-      parts.forEach(p=>hint.appendChild(typeof p==='string'?document.createTextNode(p):p));
+      parts.forEach(p=>hint.appendChild(p));
       container.appendChild(hint);
     }
   });
@@ -590,8 +591,9 @@ function buildTabUI() {
 function switchTab(idx) {
   if (idx===activeIdx||idx<0||idx>=svgStates.length) return;
 
-  // Guardar estado de filtros del tab activo
+  // Guardar estado de filtros Y dirty del tab activo
   svgStates[activeIdx].filterState=captureFilterState();
+  svgStates[activeIdx].isDirty=_isDirty;
 
   // Intercambiar SVG en DOM
   const sw=g('SW');
@@ -617,7 +619,9 @@ function switchTab(idx) {
 
   // Reconstruir controles de color
   buildColorUI();
-  markClean();
+  // Restaurar el estado dirty del tab destino (en lugar de siempre markClean)
+  _isDirty=svgStates[activeIdx].isDirty||false;
+  refreshDirtyUI();
 }
 
 // ── FILTER STATE ─────────────────────────────────────────────────
@@ -995,8 +999,7 @@ function initWithPersistence() {
   meta = await loadMeta();       // Cargar label-meta.json
   await loadAllSVGs();           // Cargar SVGs, parsear, inyectar filtros
   buildTabUI();                  // Crear pestañas si hay múltiples SVGs
-  buildColorUI();                // Renderizar controles de color
-  initWithPersistence();         // Aplicar config guardada o preset
+  initWithPersistence();         // Aplicar config guardada o preset (llama buildColorUI internamente)
 })();
 </script>
 </body>
