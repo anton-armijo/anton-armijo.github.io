@@ -3,8 +3,8 @@
     "etiqueta.svg": {
       "filter": "clean",
       "fused_colors": [
-        ["s0", "s10"],
-        ["s4", "s6", "s8", "s11", "s9"]
+        [ "s0","s10" ],
+        [ "s4","s6","s8","s11","s9" ]
       ],
       "colors": {
         "s0": { "name": "Fondo central" },
@@ -19,7 +19,8 @@
     "etiqueta-gourmet.svg": {
       "filter": "clean",
       "fused_colors": [
-        ["s4", "s3", "s5", "s1"]
+        ["s4","s3","s5","s1"
+        ]
       ],
       "colors": {
         "s0": { "name": "Fondo principal" },
