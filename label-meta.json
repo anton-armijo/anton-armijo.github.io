@@ -27,6 +27,29 @@
         "s4": { "name": "Texto dorado" },
         "s7": { "name": "Blanco" },
         "s9": { "name": "Logo" }
+      },
+    "tapa.svg": {
+      "filter": "clean",
+      "fused_colors": [
+        ["s3", "s4", "s5", "s6"]
+      ],
+      "colors": {
+        "s0": { "name": "Fondo central" },
+        "s1": { "name": "Fondo principal" },
+        "s2": { "name": "Texto" },
+        "s3": { "name": "Naranja" }
+      }
+    },
+    "tapa-gourmet.svg": {
+      "filter": "clean",
+      "fused_colors": [
+        ["s3", "s4", "s5", "s6"]
+      ],
+      "colors": {
+        "s0": { "name": "Fondo central" },
+        "s1": { "name": "Texto" },
+        "s2": { "name": "Fondo principal" },
+        "s3": { "name": "Dorado" }
       }
     }
   }
