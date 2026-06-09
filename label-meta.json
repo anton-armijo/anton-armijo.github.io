@@ -1,0 +1,57 @@
+{
+  "svgs": {
+    "etiqueta.svg": {
+      "filter": ["bg-derecha", "bg-centro", "bg-izquierda"],
+      "fused_colors": [
+        [ "s0","s10" ],
+        [ "s4","s6","s8","s11","s9" ]
+      ],
+      "colors": {
+        "s0": { "name": "Fondo central" },
+        "s1": { "name": "Negro" },
+        "s2": { "name": "Logo" },
+        "s3": { "name": "Rojo" },
+        "s4": { "name": "Texto dorado" },
+        "s5": { "name": "Fondo principal" },
+        "s7": { "name": "Blanco" }
+      }
+    },
+    "etiqueta-gourmet.svg": {
+      "filter": ["bg-derecha", "bg-centro", "bg-izquierda"],
+      "fused_colors": [
+        ["s4","s3","s5","s1"]
+      ],
+      "colors": {
+        "s0": { "name": "Fondo principal" },
+        "s2": { "name": "Fondo central" },
+        "s4": { "name": "Texto dorado" },
+        "s7": { "name": "Blanco" },
+        "s9": { "name": "Logo" }
+      }
+    },
+    "tapa.svg": {
+      "filter": [],
+      "fused_colors": [
+        ["s3", "s4", "s5", "s6"]
+      ],
+      "colors": {
+        "s0": { "name": "Fondo central" },
+        "s1": { "name": "Fondo principal" },
+        "s2": { "name": "Texto" },
+        "s3": { "name": "Naranja" }
+      }
+    },
+    "tapa-gourmet.svg": {
+      "filter": [],
+      "fused_colors": [
+        ["s3", "s4", "s5", "s6"]
+      ],
+      "colors": {
+        "s0": { "name": "Fondo central" },
+        "s1": { "name": "Texto" },
+        "s2": { "name": "Fondo principal" },
+        "s3": { "name": "Dorado" }
+      }
+    }
+  }
+}

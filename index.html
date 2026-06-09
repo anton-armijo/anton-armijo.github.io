@@ -129,7 +129,7 @@ input[type=color]{width:30px;height:30px;border-radius:7px;border:1px solid var(
     </div>
 
     <!-- TEXTURA DE FIBRAS -->
-    <div class="cg">
+    <div class="cg filter-panel">
       <h3>Textura de fibras</h3>
       <div class="cr"><span class="cl">Intensidad</span><input type="range" min="0" max=".8" step=".01" value=".25" id="fR" oninput="upd()"/><span class="cv" id="fV">25%</span></div>
       <div class="cr"><span class="cl">Escala</span><input type="range" min=".3" max="1.5" step=".05" value=".65" id="frR" oninput="upd()"/><span class="cv" id="frV">0.65</span></div>
@@ -140,14 +140,14 @@ input[type=color]{width:30px;height:30px;border-radius:7px;border:1px solid var(
     </div>
 
     <!-- PATINA -->
-    <div class="cg">
+    <div class="cg filter-panel">
       <h3>Patina / manchas</h3>
       <div class="cr"><span class="cl">Intensidad</span><input type="range" min="0" max=".6" step=".01" value=".12" id="sR" oninput="upd()"/><span class="cv" id="sV">12%</span></div>
       <div class="cr"><span class="cl">Escala</span><input type="range" min=".005" max=".05" step=".002" value=".018" id="sfR" oninput="upd()"/><span class="cv" id="sfV">0.018</span></div>
     </div>
 
     <!-- RELIEVE -->
-    <div class="cg">
+    <div class="cg filter-panel">
       <h3>Relieve (emboss)</h3>
       <div class="cr"><span class="cl">Intensidad</span><input type="range" min="0" max="1" step=".02" value=".35" id="eR" oninput="upd()"/><span class="cv" id="eV">35%</span></div>
       <div class="cr"><span class="cl">Modo blend</span><div class="br">
@@ -158,7 +158,7 @@ input[type=color]{width:30px;height:30px;border-radius:7px;border:1px solid var(
     </div>
 
     <!-- SOBREEXPOSICION -->
-    <div class="cg">
+    <div class="cg filter-panel">
       <h3>Sobreexposicion (burn)</h3>
       <div class="cr"><span class="cl">Intensidad</span><input type="range" min="0" max=".9" step=".01" value=".25" id="bR" oninput="upd()"/><span class="cv" id="bV">25%</span></div>
       <div class="cr"><span class="cl">Escala patron</span><input type="range" min=".005" max=".08" step=".002" value=".022" id="bfR" oninput="upd()"/><span class="cv" id="bfV">0.022</span></div>
@@ -169,13 +169,13 @@ input[type=color]{width:30px;height:30px;border-radius:7px;border:1px solid var(
     </div>
 
     <!-- SATURACION -->
-    <div class="cg">
+    <div class="cg filter-panel">
       <h3>Saturacion global</h3>
       <div class="cr"><span class="cl">Nivel</span><input type="range" min=".3" max="1" step=".02" value=".82" id="satR" oninput="upd()"/><span class="cv" id="satV">0.82</span></div>
     </div>
 
     <!-- PRESETS -->
-    <div class="cg pcard">
+    <div class="cg pcard filter-panel">
       <h3>Presets rapidos</h3>
       <div class="br">
         <button class="bb" onclick="applyP('clean')">Limpio</button>
@@ -198,7 +198,7 @@ let VW = 3120, VH = 2100;
 // ── ESTADO MULTI-SVG ─────────────────────────────────────────────
 //
 // svgStates : array de { name, el, svgColors, colorGroups, VW, VH,
-//                        filterPreset, filterState }
+//                        filterTargets, filterState }
 //
 // colorGroups: [{ baseId, baseSameIds, fusedPeers, name, idx, color }]
 //   baseId      : ID representativo del grupo (primary)
@@ -514,18 +514,19 @@ async function loadAllSVGs() {
   let svgList;
   if (meta?.svgs && Object.keys(meta.svgs).length) {
     // Nuevo formato: meta.svgs = { "archivo.svg": { fused_colors, filter, colors? } }
+    // filter es ahora un array de IDs de elementos destino, o [] para desactivar filtros
     svgList=Object.entries(meta.svgs).map(([name,cfg])=>({
       name,
-      fusedColors:  cfg.fused_colors||[],
-      filterPreset: cfg.filter||'clean',
-      colorMeta:    cfg.colors||null   // colores propios del SVG (sobreescribe el global)
+      fusedColors:    cfg.fused_colors||[],
+      filterTargets:  Array.isArray(cfg.filter) ? cfg.filter : [],
+      colorMeta:      cfg.colors||null
     }));
   } else {
     // Retrocompatibilidad: formato antiguo (fused_colors y filter en la raíz)
-    svgList=[{ name:'ETIQUETA.svg', fusedColors:meta?.fused_colors||[], filterPreset:meta?.filter||'clean' }];
+    svgList=[{ name:'ETIQUETA.svg', fusedColors:meta?.fused_colors||[], filterTargets:Array.isArray(meta?.filter)?meta.filter:[] }];
   }
 
-  for (const {name,fusedColors,filterPreset,colorMeta} of svgList) {
+  for (const {name,fusedColors,filterTargets,colorMeta} of svgList) {
     try {
       const res=await fetch('./'+name);
       if (!res.ok){ console.warn(`No se pudo cargar ${name}`); continue; }
@@ -551,12 +552,12 @@ async function loadAllSVGs() {
       // Construir grupos de color — usa colores del SVG primero, luego el global
       const colorGroups=buildColorGroups(svgColors,{fused_colors:fusedColors},colorMeta||meta?.colors);
 
-      const state={ name, el:svgEl, svgColors, colorGroups, VW:svgVW, VH:svgVH, filterPreset, filterState:null };
+      const state={ name, el:svgEl, svgColors, colorGroups, VW:svgVW, VH:svgVH, filterTargets, filterState:null };
       svgStates.push(state);
 
-      // Inyectar filtros (setup trabaja sobre el elemento en memoria)
+      // Inyectar filtros (solo si hay targets definidos)
       VW=svgVW; VH=svgVH;
-      setup(svgEl);
+      setup(svgEl, filterTargets);
 
     } catch(e){ console.warn(`Error al procesar ${name}:`,e.message); }
   }
@@ -572,6 +573,7 @@ async function loadAllSVGs() {
   VW=st.VW; VH=st.VH;
   const previewW=sw.offsetWidth||540;
   sw.style.height=Math.round(previewW*VH/VW)+'px';
+  updateFilterPanelsVisibility(st);
   updPngInfo();
 }
 
@@ -612,14 +614,15 @@ function switchTab(idx) {
   try {
     const fs=svgStates[activeIdx].filterState;
     if (fs) restoreFilterState(fs);
-    else    applyP(svgStates[activeIdx].filterPreset);
+    else    applyP('clean');
   } finally { _suppressDirty=false; }
 
   // Actualizar botones de tab
   document.querySelectorAll('.tab-btn').forEach((btn,i)=>btn.classList.toggle('active',i===activeIdx));
 
-  // Reconstruir controles de color
+  // Reconstruir controles de color y visibilidad de filtros
   buildColorUI();
+  updateFilterPanelsVisibility(svgStates[activeIdx]);
   // Restaurar el estado dirty del tab destino (en lugar de siempre markClean)
   _isDirty=svgStates[activeIdx].isDirty||false;
   refreshDirtyUI();
@@ -734,7 +737,7 @@ function resetConfig() {
         const orig=st.svgColors[st.colorGroups[i].baseId]?.color;
         if (orig) applyGroupColorToSVG(st, i, orig);
       }
-      st.filterState=presetToFilterState(st.filterPreset);
+      st.filterState=presetToFilterState('clean');
     }
     restoreFilterState(svgStates[activeIdx].filterState);
     buildColorUI();
@@ -758,16 +761,33 @@ function refreshDirtyUI(){
   if(btn) btn.classList.toggle('primary',_isDirty);
 }
 
+// ── VISIBILIDAD DE PANELES DE FILTRO ─────────────────────────────
+// Muestra u oculta todos los paneles .filter-panel según si el SVG
+// activo tiene elementos destino definidos en label-meta.json
+function updateFilterPanelsVisibility(state) {
+  const enabled = state?.filterTargets?.length > 0;
+  document.querySelectorAll('.filter-panel').forEach(el => {
+    el.style.display = enabled ? '' : 'none';
+  });
+  // Si se desactivan, restaurar la saturación CSS del SVG al neutro
+  if (!enabled) {
+    const svg = g('LSVG');
+    if (svg) svg.style.filter = '';
+  }
+}
+
 // ── FILTROS SVG ──────────────────────────────────────────────────
-// setup ahora acepta el elemento SVG directamente (no requiere estar en DOM)
-function setup(svg) {
-  if (!svg) svg=g('LSVG');
-  if (!svg) return;
+// setup acepta el elemento SVG y un array de IDs destino.
+// Si filterTargets está vacío, no inyecta nada.
+function setup(svg, filterTargets) {
+  if (!svg || !filterTargets || !filterTargets.length) return;
   let defs=svg.querySelector('defs');
   if (!defs){ defs=document.createElementNS(NS,'defs'); svg.insertBefore(defs,svg.firstChild); }
   svg.querySelectorAll('[id^="TF-"],[id^="TC-"],[id^="TO-"]').forEach(e=>e.remove());
-  svg.querySelectorAll('[id^="bg-"]').forEach(bgPath=>{
-    const z=bgPath.id.replace('bg-','');
+  filterTargets.forEach(targetId=>{
+    const bgPath=svg.querySelector('#'+targetId);
+    if (!bgPath){ console.warn(`setup: no se encontró #${targetId}`); return; }
+    const z=targetId;
     const cid='TC-'+z;
     const cp=document.createElementNS(NS,'clipPath'); cp.id=cid;
     const cl=bgPath.cloneNode(true);
@@ -847,9 +867,12 @@ function upd() {
   g('sV').textContent  =Math.round(sv*100)+'%'; g('sfV').textContent =sf.toFixed(3);
   g('eV').textContent  =Math.round(ev*100)+'%'; g('bV').textContent  =Math.round(bv*100)+'%';
   g('bfV').textContent =bf.toFixed(3);           g('satV').textContent=sat.toFixed(2);
+
+  const filterTargets=svgStates[activeIdx]?.filterTargets||[];
+  if (!filterTargets.length) { markDirty(); return; }
+
   svg.style.filter=`saturate(${sat.toFixed(2)})`;
-  svg.querySelectorAll('[id^="bg-"]').forEach(bgPath=>{
-    const z=bgPath.id.replace('bg-','');
+  filterTargets.forEach(z=>{
     const ffid='TF-FIB-'+z;
     const fft1=svg.querySelector('#'+ffid+'-ft1'), ffi=svg.querySelector('#'+ffid+'-fi');
     const fft2=svg.querySelector('#'+ffid+'-ft2'), fst=svg.querySelector('#'+ffid+'-st');
@@ -965,7 +988,7 @@ function initWithPersistence() {
         cfg=loadLS(LS_PREFIX+st.name);
       }
       if (cfg) applyConfigToState(st, cfg);
-      else     st.filterState=presetToFilterState(st.filterPreset);
+      else     st.filterState=presetToFilterState('clean');
     }
 
     // Si la URL apunta a otro tab, hacer switchTab silencioso
@@ -985,10 +1008,11 @@ function initWithPersistence() {
     // Aplicar estado de filtros del SVG activo a los sliders
     const fs=svgStates[activeIdx].filterState;
     if (fs) restoreFilterState(fs);
-    else    applyP(svgStates[activeIdx].filterPreset);
+    else    applyP('clean');
 
     // Reconstruir UI con colores correctos
     buildColorUI();
+    updateFilterPanelsVisibility(svgStates[activeIdx]);
     updPngInfo();
 
   } finally { _suppressDirty=false; }
