@@ -16,6 +16,22 @@
         "s7": { "name": "Blanco" }
       }
     },
+    "etiqueta-sin-arandanos.svg": {
+      "filter": ["bg-derecha", "bg-centro", "bg-izquierda"],
+      "fused_colors": [
+        [ "s0","s10" ],
+        [ "s4","s6","s8","s11","s9" ]
+      ],
+      "colors": {
+        "s0": { "name": "Fondo central" },
+        "s1": { "name": "Negro" },
+        "s2": { "name": "Logo" },
+        "s3": { "name": "Rojo" },
+        "s4": { "name": "Texto dorado" },
+        "s5": { "name": "Fondo principal" },
+        "s7": { "name": "Blanco" }
+      }
+    },
     "etiqueta-gourmet.svg": {
       "filter": ["bg-derecha", "bg-centro", "bg-izquierda"],
       "fused_colors": [
